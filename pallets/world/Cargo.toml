@@ -1,0 +1,36 @@
+[package]
+authors = ['andy.bell@barkingmad.io']
+description = 'A world view'
+edition = '2018'
+homepage = 'https://barkingmad.io'
+license = 'Unlicense'
+name = 'pallet-world'
+repository = 'https://github.com/BarkingMadLabs/subworld'
+version = '2.0.1'
+
+[package.metadata.docs.rs]
+targets = ['x86_64-unknown-linux-gnu']
+
+# alias "parity-scale-code" to "codec"
+[dependencies.codec]
+default-features = false
+features = ['derive']
+package = 'parity-scale-codec'
+version = '1.3.4'
+
+[dependencies]
+frame-support = { default-features = false, version = '2.0.1' }
+frame-system = { default-features = false, version = '2.0.1' }
+
+[dev-dependencies]
+sp-core = { default-features = false, version = '2.0.1' }
+sp-io = { default-features = false, version = '2.0.1' }
+sp-runtime = { default-features = false, version = '2.0.1' }
+
+[features]
+default = ['std']
+std = [
+    'codec/std',
+    'frame-support/std',
+    'frame-system/std',
+]
