@@ -32,5 +32,6 @@ pub trait World<AccountId> {
     fn approval_multiple(world_id: &Self::WorldId, token_ids: Vec<Self::TokenId>, approved: &AccountId) -> Result<(), DispatchError>;
     /// Burn tokens
     fn burn(world_id: &Self::WorldId, token_id: &Self::TokenId, amount: u64) -> Result<(), DispatchError>;
-    
+    /// Data for token
+    fn data(world_id: &Self::WorldId, token_id: &Self::TokenId) -> Option<MetaData>;
 }
