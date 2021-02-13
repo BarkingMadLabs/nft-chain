@@ -16,8 +16,12 @@ pub trait World<AccountId> {
     fn create(owner: &AccountId) -> Result<Self::WorldId, DispatchError>;
     /// Mint items for this world, minting 1 would make the item unique
     fn mint(world_id: &Self::WorldId, amount: u64, data: Option<Self::MetaData>) -> Result<Self::TokenId, DispatchError>;
+    /// Total minted for a token
+    fn total(world_id: &Self::WorldId, token_id: &Self::TokenId) -> u128;
     /// Balance of token for user
     fn balance(world_id: &Self::WorldId, token_id: &Self::TokenId, owner: &AccountId) -> u128;
+    /// Owner of token
+    fn owner_of(world_id: &Self::WorldId, token_id: &Self::TokenId) -> AccountId;
     /// Transfer token from owner to new owner
     fn transfer(world_id: &Self::WorldId, token_id: &Self::TokenId, amount: u64, to: &AccountId) -> Result<(), DispatchError>;
     /// Transfer multiple tokens
