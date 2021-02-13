@@ -1,4 +1,3 @@
-
 use frame_support::{
     dispatch::{result::Result, DispatchError, DispatchResult},
     traits::Get,
@@ -7,7 +6,6 @@ use frame_support::{
 use sp_std::vec::Vec;
 
 pub trait World<AccountId> {
-    
     type WorldId;
     type TokenId;
     type MetaData;
@@ -18,6 +16,8 @@ pub trait World<AccountId> {
     fn mint(world_id: &Self::WorldId, amount: u64, data: Option<Self::MetaData>) -> Result<Self::TokenId, DispatchError>;
     /// Total minted for a token
     fn total(world_id: &Self::WorldId, token_id: &Self::TokenId) -> u128;
+    /// Total burned for a token
+    fn burnt(world_id: &Self::WorldId, token_id: &Self::TokenId) -> u128;
     /// Balance of token for user
     fn balance(world_id: &Self::WorldId, token_id: &Self::TokenId, owner: &AccountId) -> u128;
     /// Owner of token
