@@ -5,6 +5,11 @@ use frame_support::{
 
 use sp_std::vec::Vec;
 
+pub trait Ownable<AccountId> {
+    fn owner() -> AccountId;
+    fn set_owner(owner: &AccountId) -> AccountId;
+}
+
 pub trait World<AccountId> {
     type WorldId;
     type TokenId;
@@ -34,4 +39,17 @@ pub trait World<AccountId> {
     fn burn(world_id: &Self::WorldId, token_id: &Self::TokenId, amount: u64) -> Result<(), DispatchError>;
     /// Data for token
     fn data(world_id: &Self::WorldId, token_id: &Self::TokenId) -> Option<MetaData>;
+}
+
+pub trait Market {
+    type WorldId;
+    type TokenId;
+    type Balance;
+
+    /// Put an item on the market to sell.  The offer is the minimum amount required per item.  Amount is the amount
+    /// we want to offer to sell.
+    fn offer(world_id: &Self::WorldId, token_id: &Self::TokenId, amount: u64, offer: Balance);
+    /// Offer on an item in the market to buy.  If we offer the buy now price or more then this is transacted immediately else it
+    /// goes on the book to be approved by seller
+    fn bid(world_id: &Self::WorldId, token_id: &Self::TokenId, amount: u64, offer: Balance);
 }
