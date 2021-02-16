@@ -13,12 +13,12 @@ pub trait Market {
 
     /// Put an item on the market to sell.  The offer is the minimum amount required per item.  Amount is the amount
     /// we want to offer to sell.
-    fn offer_on_item(domain_id: &Self::DomainId, item_id: &Self::ItemId, amount: u64, offer: Balance);
+    fn offer_on_item(domain_id: &Self::DomainId, item_id: &Self::ItemId, amount: u64, offer: &Self::Balance);
     /// Offer on an item in the market to buy.  If we offer the buy now price or more then this is transacted immediately else it
     /// goes on the book to be approved by seller
-    fn bid_on_item(domain_id: &Self::DomainId, item_id: &Self::ItemId, amount: u64, offer: Balance);
+    fn bid_on_item(domain_id: &Self::DomainId, item_id: &Self::ItemId, amount: u64, offer: &Self::Balance);
     /// A list of the bids on an item
-    fn list_bids_for_item(domain_id: &Self::DomainId, item_id: &Self::ItemId) -> Vec<Bid>;
+    fn list_bids_for_item(domain_id: &Self::DomainId, item_id: &Self::ItemId) -> Vec<Self::Bid>;
     /// Accept or reject an item that has a bid
     fn accept_bid_for_item(domain_id: &Self::DomainId, item_id: &Self::ItemId, bid: &Self::Bid);
 }

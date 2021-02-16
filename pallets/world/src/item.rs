@@ -33,5 +33,5 @@ pub trait Domain<AccountId> {
     /// Burn items
     fn burn_items(domain_id: &Self::DomainId, item_id: &Self::ItemId, amount: u64) -> Result<(), DispatchError>;
     /// Data for item
-    fn data_for_item(domain_id: &Self::DomainId, item_id: &Self::ItemId) -> Option<MetaData>;
+    fn data_for_item(domain_id: &Self::DomainId, item_id: &Self::ItemId) -> Option<Self::MetaData>;
 }

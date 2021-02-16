@@ -25,3 +25,6 @@ purge:
 restart: purge run
 
 init: toolchain build-full
+
+build-pallet-world:
+	SKIP_WASM_BUILD= cargo build -p pallet-world
