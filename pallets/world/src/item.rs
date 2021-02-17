@@ -11,7 +11,7 @@ pub trait Domain<AccountId> {
     type MetaData;
 
     /// Create a domain which is owned by this account
-    fn create_domain(owner: &AccountId) -> Result<Self::DomainId, DispatchError>;
+    fn create_domain(owner: &AccountId, name: &str) -> Result<Self::DomainId, DispatchError>;
     /// Mint items for this domain, minting 1 would make the item unique
     fn mint_item(domain_id: &Self::DomainId, amount: u64, data: Option<Self::MetaData>) -> Result<Self::ItemId, DispatchError>;
     /// Total minted for a item
