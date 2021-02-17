@@ -1,10 +1,10 @@
 #![cfg_attr(not(feature = "std"), no_std)]
-use frame_support::{decl_module, decl_storage, decl_event, decl_error, dispatch::{DispatchError, DispatchResult}, traits::Get};
+use std::fmt::Debug;
+use frame_support::{decl_module, decl_storage, decl_event, decl_error, Parameter, dispatch::{DispatchError, DispatchResult}, traits::Get};
 use frame_system::ensure_signed;
-use frame_support::codec::{Decode, Encode};
-use sp_runtime::traits::AtLeast32BitUnsigned;
+use sp_runtime::traits::{AtLeast32BitUnsigned, MaybeSerializeDeserialize, Member, CheckedAdd};
 use sp_std::result::Result;
-
+use codec::{Codec, Encode, Decode};
 #[cfg(test)]
 mod mock;
 
@@ -13,13 +13,11 @@ mod tests;
 
 pub trait Trait: frame_system::Trait {
 	type Event: From<Event<Self>> + Into<<Self as frame_system::Trait>::Event>;
-	type Index: AtLeast32BitUnsigned;
+	type Identifier: Parameter + Member + AtLeast32BitUnsigned + Codec + Default + Copy + MaybeSerializeDeserialize + Debug + CheckedAdd;
 }
 
-type Identifier = u32;
-
 #[derive(Encode, Decode, Default, Clone, PartialEq)]
-pub struct Contract {
+pub struct Contract<Identifier> {
 	symbol: Vec<u8>,
 	name: Vec<u8>,
 	counter: Identifier,
@@ -27,7 +25,7 @@ pub struct Contract {
 }
 
 #[derive(Encode, Decode, Default, Clone, PartialEq)]
-pub struct Token {
+pub struct Token<Identifier> {
 	id: Identifier,
 	base_uri: Vec<u8>,
 	total_supply: Identifier,
@@ -35,15 +33,18 @@ pub struct Token {
 
 decl_storage! {
 	trait Store for Module<T: Trait> as Worlds {
-		pub NextContractId get(fn next_contract_id): Index;
-		pub Contracts get(fn contracts): map hasher(blake2_128_concat) Index => Contract; 
-		pub Owners get(fn owners): map hasher(blake2_128_concat) Index => T::AccountId;
+		pub NextContractId get(fn next_contract_id): T::Identifier;
+		pub Contracts get(fn contracts): map hasher(blake2_128_concat) T::Identifier => Contract<T::Identifier>; 
+		pub Owners get(fn owners): map hasher(blake2_128_concat) T::Identifier => T::AccountId;
 	}
 }
 
 decl_event!(
-	pub enum Event<T> where AccountId = <T as frame_system::Trait>::AccountId {
-		ContractCreated(Identifier, AccountId),
+	pub enum Event<T> 
+	where 
+	AccountId = <T as frame_system::Trait>::AccountId,
+	Identifier = <T as Trait>::Identifier {
+		ContractCreated(AccountId, Identifier),
 	}
 );
 
@@ -62,24 +63,24 @@ decl_module! {
 		pub fn create_contract(origin, symbol: Vec<u8>, name: Vec<u8>) {
 			let who = ensure_signed(origin)?;
 
-			let contract = Contract {
+			let contract = Contract::<T::Identifier> {
 				symbol,
 				name,
 				counter: 0u32.into(),
 				tokens: None,
 			};
 
-			let next: Identifier = Self::next_contract_id();
-			Contracts::insert(next, contract);
+			let next = Self::next_contract_id();
+			Contracts::<T>::insert(next, contract);
 		}
 	}
 }
 
 impl <T: Trait> Module<T> {
-	fn get_next_contract_id() -> Result<Identifier, DispatchError> {
-		NextContractId::try_mutate(|next_id| -> Result<Identifier, DispatchError> {
-			let current_id = *next_id;
-			*next_id = next_id.checked_add(1).ok_or(Error::<T>::ContractIdOverflow)?;
+	fn get_next_contract_id() -> Result<T::Identifier, DispatchError> {
+		NextContractId::<T>::try_mutate(|next_id| -> Result<T::Identifier, DispatchError> {
+			let current_id : <T as Trait>::Identifier = *next_id;
+			*next_id = next_id.checked_add(&0u32.into()).ok_or(Error::<T>::ContractIdOverflow)?;
 			Ok(current_id)
 		})
 	}
