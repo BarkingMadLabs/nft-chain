@@ -72,6 +72,7 @@ decl_module! {
 
 			let next = Self::next_contract_id();
 			Contracts::<T>::insert(next, contract);
+			Owners::<T>::insert(next, who);
 		}
 	}
 }
