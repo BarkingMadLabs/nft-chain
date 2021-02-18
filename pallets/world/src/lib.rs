@@ -28,7 +28,7 @@ pub struct Contract<Identifier> {
 pub struct Token<Identifier> {
 	id: Identifier,
 	base_uri: Vec<u8>,
-	total_supply: Identifier,
+	total_supply: u128,
 }
 
 decl_storage! {
