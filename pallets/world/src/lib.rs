@@ -69,6 +69,8 @@ decl_error! {
 		ContractIdOverflow,
 		InvalidContract,
 		NotContractOwner,
+		InvalidSymbol,
+		InvalidName,
 	}
 }
 
@@ -78,8 +80,10 @@ decl_module! {
 		fn deposit_event() = default;
 		#[weight = 10_000 + T::DbWeight::get().writes(1)]
 		pub fn create_contract(origin, symbol: Vec<u8>, name: Vec<u8>) {
+			ensure!(symbol.len() > 3, Error::<T>::InvalidSymbol);
+			ensure!(name.len() > 3, Error::<T>::InvalidName);
 			let who = ensure_signed(origin)?;
-
+			
 			let contract = Contract {
 				symbol,
 				name,
