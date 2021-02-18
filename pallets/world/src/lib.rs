@@ -26,10 +26,12 @@ pub struct Contract<Identifier> {
 }
 
 #[derive(Encode, Decode, Default, Clone, PartialEq)]
-pub struct Token<Identifier> {
+pub struct Token<Identifier, AccountId> {
 	id: Identifier,
 	base_uri: Vec<u8>,
+	counter: Identifier,
 	total_supply: u128,
+	creator: AccountId,
 }
 
 decl_storage! {
