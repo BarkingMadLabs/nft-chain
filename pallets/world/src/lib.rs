@@ -1,6 +1,6 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 use std::fmt::Debug;
-use frame_support::{decl_module, decl_storage, decl_event, decl_error, Parameter, dispatch::{DispatchError, DispatchResult}, traits::Get};
+use frame_support::{Identity, Parameter, decl_error, decl_event, decl_module, decl_storage, dispatch::{DispatchError, DispatchResult}, traits::Get};
 use frame_system::ensure_signed;
 use sp_runtime::traits::{AtLeast32BitUnsigned, MaybeSerializeDeserialize, Member, CheckedAdd};
 use sp_std::result::Result;
@@ -18,9 +18,10 @@ pub trait Trait: frame_system::Trait {
 
 #[derive(Encode, Decode, Default, Clone, PartialEq)]
 pub struct Contract<Identifier> {
+	id: Identifier,
 	symbol: Vec<u8>,
-	name: Vec<u8>,
 	counter: Identifier,
+	name: Vec<u8>,
 	tokens: Option<Vec<Identifier>>,
 }
 
@@ -63,14 +64,15 @@ decl_module! {
 		pub fn create_contract(origin, symbol: Vec<u8>, name: Vec<u8>) {
 			let who = ensure_signed(origin)?;
 
+			let next = Self::next_contract_id();
 			let contract = Contract::<T::Identifier> {
+				id: next,
 				symbol,
 				name,
 				counter: 0u32.into(),
 				tokens: None,
 			};
 
-			let next = Self::next_contract_id();
 			Contracts::<T>::insert(next, contract);
 			Owners::<T>::insert(next, who);
 		}
