@@ -1,6 +1,6 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 use std::fmt::Debug;
-use frame_support::{Identity, Parameter, decl_error, decl_event, decl_module, decl_storage, ensure, dispatch::{DispatchError, DispatchResult}, traits::Get};
+use frame_support::{Parameter, decl_error, decl_event, decl_module, decl_storage, ensure, dispatch::{DispatchError}, traits::Get};
 use frame_system::ensure_signed;
 use sp_runtime::traits::{AtLeast32BitUnsigned, MaybeSerializeDeserialize, Member, CheckedAdd};
 use sp_std::result::Result;
