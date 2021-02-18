@@ -17,28 +17,34 @@ pub trait Trait: frame_system::Trait {
 }
 
 #[derive(Encode, Decode, Default, Clone, PartialEq)]
-pub struct Contract<Identifier> {
-	id: Identifier,
+pub struct Contract {
 	symbol: Vec<u8>,
-	counter: Identifier,
 	name: Vec<u8>,
-	tokens: Option<Vec<Identifier>>,
 }
 
 #[derive(Encode, Decode, Default, Clone, PartialEq)]
-pub struct Token<Identifier, AccountId> {
-	id: Identifier,
+pub struct Token<AccountId> {
 	base_uri: Vec<u8>,
-	counter: Identifier,
 	total_supply: u128,
 	creator: AccountId,
 }
 
 decl_storage! {
 	trait Store for Module<T: Trait> as Worlds {
-		pub NextContractId get(fn next_contract_id): T::Identifier;
-		pub Contracts get(fn contracts): map hasher(blake2_128_concat) T::Identifier => Contract<T::Identifier>; 
-		pub Owners get(fn owners): map hasher(blake2_128_concat) T::Identifier => T::AccountId;
+		pub NextContractId get(fn next_contract_id): 
+			T::Identifier;
+		pub NextTokenId get(fn next_token_id): 
+			T::Identifier;
+		pub Contracts get(fn contracts): 
+			map 
+			hasher(blake2_128_concat) T::Identifier => Contract; 
+		pub Owners get(fn owners): 
+			map 
+			hasher(blake2_128_concat) T::Identifier => T::AccountId;
+		pub Tokens get(fn tokens):
+			double_map 
+			hasher(blake2_128_concat) T::Identifier, 
+			hasher(blake2_128_concat) T::Identifier => Token<T::AccountId>;
 	}
 }
 
@@ -66,15 +72,12 @@ decl_module! {
 		pub fn create_contract(origin, symbol: Vec<u8>, name: Vec<u8>) {
 			let who = ensure_signed(origin)?;
 
-			let next = Self::next_contract_id();
-			let contract = Contract::<T::Identifier> {
-				id: next,
+			let contract = Contract {
 				symbol,
 				name,
-				counter: 0u32.into(),
-				tokens: None,
 			};
 
+			let next = Self::next_contract_id();
 			Contracts::<T>::insert(next, contract);
 			Owners::<T>::insert(next, who);
 		}
@@ -84,6 +87,13 @@ decl_module! {
 impl <T: Trait> Module<T> {
 	fn get_next_contract_id() -> Result<T::Identifier, DispatchError> {
 		NextContractId::<T>::try_mutate(|next_id| -> Result<T::Identifier, DispatchError> {
+			let current_id : <T as Trait>::Identifier = *next_id;
+			*next_id = next_id.checked_add(&0u32.into()).ok_or(Error::<T>::ContractIdOverflow)?;
+			Ok(current_id)
+		})
+	}
+	fn get_next_token_id() -> Result<T::Identifier, DispatchError> {
+		NextTokenId::<T>::try_mutate(|next_id| -> Result<T::Identifier, DispatchError> {
 			let current_id : <T as Trait>::Identifier = *next_id;
 			*next_id = next_id.checked_add(&0u32.into()).ok_or(Error::<T>::ContractIdOverflow)?;
 			Ok(current_id)
