@@ -71,6 +71,8 @@ decl_error! {
 		NotContractOwner,
 		InvalidSymbol,
 		InvalidName,
+		InvalidTotalSupply,
+		InvalidBaseUri,
 	}
 }
 
@@ -97,6 +99,8 @@ decl_module! {
 		#[weight = 10_000 + T::DbWeight::get().writes(1)]		
 		pub fn create_token(origin, contract_id: T::Identifier, creator: T::AccountId, total_supply: u128, base_uri: Vec<u8>) {
 			let who = ensure_signed(origin)?;
+			ensure!(total_supply > 0, Error::<T>::InvalidTotalSupply);
+			ensure!(base_uri.len() > 3, Error::<T>::InvalidBaseUri);			
 			ensure!(Contracts::<T>::contains_key(&contract_id), Error::<T>::InvalidContract);
 			ensure!(Owners::<T>::get(&contract_id) == who, Error::<T>::NotContractOwner);
 			let token = Token {
