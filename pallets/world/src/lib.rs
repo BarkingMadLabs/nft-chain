@@ -1,6 +1,6 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 use std::fmt::Debug;
-use frame_support::{Identity, Parameter, decl_error, decl_event, decl_module, decl_storage, dispatch::{DispatchError, DispatchResult}, traits::Get};
+use frame_support::{Identity, Parameter, decl_error, decl_event, decl_module, decl_storage, ensure, dispatch::{DispatchError, DispatchResult}, traits::Get};
 use frame_system::ensure_signed;
 use sp_runtime::traits::{AtLeast32BitUnsigned, MaybeSerializeDeserialize, Member, CheckedAdd};
 use sp_std::result::Result;
@@ -31,16 +31,22 @@ pub struct Token<AccountId> {
 
 decl_storage! {
 	trait Store for Module<T: Trait> as Worlds {
+
 		pub NextContractId get(fn next_contract_id): 
 			T::Identifier;
+		
 		pub NextTokenId get(fn next_token_id): 
-			T::Identifier;
+			map
+			hasher(blake2_128_concat) T::Identifier => T::Identifier;
+
 		pub Contracts get(fn contracts): 
 			map 
 			hasher(blake2_128_concat) T::Identifier => Contract; 
+		
 		pub Owners get(fn owners): 
 			map 
 			hasher(blake2_128_concat) T::Identifier => T::AccountId;
+		
 		pub Tokens get(fn tokens):
 			double_map 
 			hasher(blake2_128_concat) T::Identifier, 
@@ -61,6 +67,8 @@ decl_error! {
 	pub enum Error for Module<T: Trait> {
 		NoneValue,
 		ContractIdOverflow,
+		InvalidContract,
+		NotContractOwner,
 	}
 }
 
@@ -77,9 +85,23 @@ decl_module! {
 				name,
 			};
 
-			let next = Self::next_contract_id();
+			let next = Self::get_next_contract_id()?;
 			Contracts::<T>::insert(next, contract);
 			Owners::<T>::insert(next, who);
+		}
+
+		#[weight = 10_000 + T::DbWeight::get().writes(1)]		
+		pub fn create_token(origin, contract_id: T::Identifier, creator: T::AccountId, total_supply: u128, base_uri: Vec<u8>) {
+			let who = ensure_signed(origin)?;
+			ensure!(Contracts::<T>::contains_key(&contract_id), Error::<T>::InvalidContract);
+			ensure!(Owners::<T>::get(&contract_id) == who, Error::<T>::NotContractOwner);
+			let token = Token {
+				base_uri,
+				total_supply,
+				creator,
+			};
+			let next = Self::get_next_token_id(&contract_id)?;
+			Tokens::<T>::insert(contract_id, next, token);
 		}
 	}
 }
@@ -92,11 +114,11 @@ impl <T: Trait> Module<T> {
 			Ok(current_id)
 		})
 	}
-	fn get_next_token_id() -> Result<T::Identifier, DispatchError> {
-		NextTokenId::<T>::try_mutate(|next_id| -> Result<T::Identifier, DispatchError> {
-			let current_id : <T as Trait>::Identifier = *next_id;
-			*next_id = next_id.checked_add(&0u32.into()).ok_or(Error::<T>::ContractIdOverflow)?;
-			Ok(current_id)
+	fn get_next_token_id(contract_id: &T::Identifier) -> Result<T::Identifier, DispatchError> {
+		NextTokenId::<T>::try_mutate_exists(contract_id, |maybe_id| {
+			let current_id = maybe_id.take().ok_or(Error::<T>::InvalidContract)?;
+			let new_id = current_id.checked_add(&1u32.into()).ok_or(Error::<T>::ContractIdOverflow)?;
+			Ok(new_id)
 		})
 	}
 }
