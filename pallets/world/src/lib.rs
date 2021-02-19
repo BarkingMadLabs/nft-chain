@@ -20,7 +20,7 @@ pub trait Trait: frame_system::Trait {
 }
 
 #[derive(Encode, Decode, Default, Clone, PartialEq)]
-pub struct Contract<Identifier, AccountId> {
+pub struct Domain<Identifier, AccountId> {
 	symbol: Vec<u8>,
 	name: Vec<u8>,
 	next_token_id: Identifier,
@@ -38,11 +38,11 @@ pub struct Token<AccountId, Balance> {
 decl_storage! {
 	trait Store for Module<T: Trait> as Worlds {
 
-		pub NextContractId get(fn next_contract_id): T::Identifier;
+		pub NextDomainId get(fn next_domain_id): T::Identifier;
 		
-		pub Contracts get(fn contracts): 
+		pub Domains get(fn domains): 
 			map 
-			hasher(blake2_128_concat) T::Identifier => Contract<T::Identifier, T::AccountId>; 
+			hasher(blake2_128_concat) T::Identifier => Domain<T::Identifier, T::AccountId>; 
 		
 		pub Tokens get(fn tokens):
 			double_map 
@@ -62,16 +62,16 @@ decl_event!(
 	where 
 	AccountId = <T as frame_system::Trait>::AccountId,
 	Identifier = <T as Trait>::Identifier {
-		ContractCreated(AccountId, Identifier),
+		DomainCreated(AccountId, Identifier),
 	}
 );
 
 decl_error! {
 	pub enum Error for Module<T: Trait> {
 		NoneValue,
-		ContractIdOverflow,
-		InvalidContract,
-		NotContractOwner,
+		DomainIdOverflow,
+		InvalidDomain,
+		NotDomainOwner,
 		InvalidSymbol,
 		InvalidName,
 		InvalidTotalSupply,
@@ -85,38 +85,38 @@ decl_module! {
 		type Error = Error<T>;
 		fn deposit_event() = default;
 		#[weight = 10_000 + T::DbWeight::get().writes(1)]
-		pub fn create_contract(origin, symbol: Vec<u8>, name: Vec<u8>) {
+		pub fn create_domain(origin, symbol: Vec<u8>, name: Vec<u8>) {
 			ensure!(symbol.len() > 3, Error::<T>::InvalidSymbol);
 			ensure!(name.len() > 3, Error::<T>::InvalidName);
 			let owner = ensure_signed(origin)?;
 			
-			let contract = Contract {
+			let domain = Domain {
 				symbol,
 				name,
 				next_token_id: Zero::zero(),
 				owner
 			};
 
-			let next = Self::get_next_contract_id()?;
-			Contracts::<T>::insert(next, contract);
+			let next = Self::get_next_domain_id()?;
+			Domains::<T>::insert(next, domain);
 		}
 
 		#[weight = 10_000 + T::DbWeight::get().writes(1)]		
-		pub fn create_token(origin, contract_id: T::Identifier, creator: T::AccountId, total_supply: T::Balance, base_uri: Vec<u8>) -> DispatchResult {
+		pub fn create_token(origin, domain_id: T::Identifier, creator: T::AccountId, total_supply: T::Balance, base_uri: Vec<u8>) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 			ensure!(total_supply > 0.into(), Error::<T>::InvalidTotalSupply);
 			ensure!(base_uri.len() > 3, Error::<T>::InvalidBaseUri);			
 				
-			Contracts::<T>::try_mutate(contract_id, |contract| {
-				ensure!(contract.owner == who, Error::<T>::NotContractOwner);			
+			Domains::<T>::try_mutate(domain_id, |domain| {
+				ensure!(domain.owner == who, Error::<T>::NotDomainOwner);			
 				let token = Token {
 					base_uri,
 					total_supply,
 					creator: creator.clone(),
 				};
-				let next = contract.next_token_id.checked_add(&1u32.into()).ok_or(Error::<T>::ContractIdOverflow)?;
-				contract.next_token_id = next;
-				Tokens::<T>::insert(contract_id, next, token);
+				let next = domain.next_token_id.checked_add(&1u32.into()).ok_or(Error::<T>::DomainIdOverflow)?;
+				domain.next_token_id = next;
+				Tokens::<T>::insert(domain_id, next, token);
 				Self::mint(creator, next, total_supply)?;
 				Ok(())
 			})
@@ -130,16 +130,16 @@ impl <T: Trait> Module<T> {
 		encoded.append(&mut token_id.encode());
 		let hash = T::Hashing::hash(encoded.as_bytes_ref());
 		Balances::<T>::try_mutate_exists(hash, |maybe_balance| {
-			let balance = maybe_balance.take().ok_or(Error::<T>::InvalidContract)?;
+			let balance = maybe_balance.take().ok_or(Error::<T>::InvalidDomain)?;
 			let new_balance = balance.checked_add(&quantity).ok_or(Error::<T>::BalanceOverflow)?;
 			Ok(new_balance)
 		})
 	}
 
-	fn get_next_contract_id() -> Result<T::Identifier, DispatchError> {
-		NextContractId::<T>::try_mutate(|next_id| -> Result<T::Identifier, DispatchError> {
+	fn get_next_domain_id() -> Result<T::Identifier, DispatchError> {
+		NextDomainId::<T>::try_mutate(|next_id| -> Result<T::Identifier, DispatchError> {
 			let current_id : <T as Trait>::Identifier = *next_id;
-			*next_id = next_id.checked_add(&0u32.into()).ok_or(Error::<T>::ContractIdOverflow)?;
+			*next_id = next_id.checked_add(&0u32.into()).ok_or(Error::<T>::DomainIdOverflow)?;
 			Ok(current_id)
 		})
 	}
