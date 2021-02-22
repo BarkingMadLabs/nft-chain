@@ -264,6 +264,9 @@ impl pallet_sudo::Trait for Runtime {
 /// Configure the world pallet in pallets/world.
 impl pallet_world::Trait for Runtime {
 	type Event = Event;
+	type Balance = u64;
+	type DomainId = u64;
+	type TokenId = u64;
 }
 
 // Create the runtime by composing the FRAME pallets that were previously configured.
