@@ -26,5 +26,5 @@ restart: purge run
 
 init: toolchain build-full
 
-build-pallet-world:
-	SKIP_WASM_BUILD= cargo build -p pallet-world
+build-pallet-nft:
+	SKIP_WASM_BUILD= cargo build -p pallet-nft

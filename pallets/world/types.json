@@ -1,6 +1,0 @@
-{
-    "Address": "MultiAddress",
-    "TokenId": "u64",
-    "DomainId": "u64",
-    "LookupSource": "MultiAddress"
-  }

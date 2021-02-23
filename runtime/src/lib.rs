@@ -38,8 +38,8 @@ pub use frame_support::{
 	},
 };
 
-/// Import the world pallet.
-pub use pallet_world;
+/// Import the nft pallet.
+pub use pallet_nft;
 
 /// An index to a block.
 pub type BlockNumber = u32;
@@ -261,8 +261,8 @@ impl pallet_sudo::Trait for Runtime {
 	type Call = Call;
 }
 
-/// Configure the world pallet in pallets/world.
-impl pallet_world::Trait for Runtime {
+/// Configure the nft pallet in pallets/nft.
+impl pallet_nft::Trait for Runtime {
 	type Event = Event;
 	type Balance = u64;
 	type DomainId = u64;
@@ -285,7 +285,7 @@ construct_runtime!(
 		TransactionPayment: pallet_transaction_payment::{Module, Storage},
 		Sudo: pallet_sudo::{Module, Call, Config<T>, Storage, Event<T>},
 		// Include the custom logic from the template pallet in the runtime.
-		Worlds: pallet_world::{Module, Call, Storage, Event<T>},
+		Nft: pallet_nft::{Module, Call, Storage, Event<T>},
 	}
 );
 

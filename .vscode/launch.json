@@ -82,16 +82,16 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug unit tests in library 'pallet-world'",
+            "name": "Debug unit tests in library 'pallet-nft'",
             "cargo": {
                 "args": [
                     "test",
                     "--no-run",
                     "--lib",
-                    "--package=pallet-world"
+                    "--package=pallet-nft"
                 ],
                 "filter": {
-                    "name": "pallet-world",
+                    "name": "pallet-nft",
                     "kind": "lib"
                 }
             },
