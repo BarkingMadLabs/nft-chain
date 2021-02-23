@@ -1,9 +1,13 @@
-use crate::{Error, mock::*};
+use crate::{Error, mock::*, RawEvent};
 use frame_support::{assert_ok, assert_noop};
 
 #[test]
-fn it_works_for_default_value() {
+fn it_creates_a_domain() {
 	new_test_ext().execute_with(|| {
+		assert_ok!(WorldModule::create_domain(Origin::signed(100), "ZOD".as_bytes().to_vec(), "Zodiac".as_bytes().to_vec()));
+		assert_eq!(last_event(), Event::world(RawEvent::DomainCreated(100, 0)));
+		assert_ok!(WorldModule::create_domain(Origin::signed(100), "ZOD".as_bytes().to_vec(), "Zodiac".as_bytes().to_vec()));
+		assert_eq!(last_event(), Event::world(RawEvent::DomainCreated(100, 1)));
 	});
 }
 

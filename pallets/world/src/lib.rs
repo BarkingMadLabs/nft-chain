@@ -84,7 +84,7 @@ decl_module! {
 		fn deposit_event() = default;
 		#[weight = 10_000 + T::DbWeight::get().writes(1)]
 		pub fn create_domain(origin, symbol: Vec<u8>, name: Vec<u8>) {
-			ensure!(symbol.len() > 3, Error::<T>::InvalidSymbol);
+			ensure!(symbol.len() > 2, Error::<T>::InvalidSymbol);
 			ensure!(name.len() > 3, Error::<T>::InvalidName);
 			let owner = ensure_signed(origin)?;
 			
@@ -92,11 +92,12 @@ decl_module! {
 				symbol,
 				name,
 				next_token_id: Zero::zero(),
-				owner
+				owner: owner.clone()
 			};
 
 			let next = Self::get_next_domain_id()?;
 			Domains::<T>::insert(next, domain);
+			Self::deposit_event(RawEvent::DomainCreated(owner, next));
 		}
 
 		#[weight = 10_000 + T::DbWeight::get().writes(1)]		
@@ -134,7 +135,7 @@ impl <T: Trait> Module<T> {
 	fn get_next_domain_id() -> Result<T::DomainId, DispatchError> {
 		NextDomainId::<T>::try_mutate(|next_id| -> Result<T::DomainId, DispatchError> {
 			let current_id : <T as Trait>::DomainId = *next_id;
-			*next_id = next_id.checked_add(&0u32.into()).ok_or(Error::<T>::DomainIdOverflow)?;
+			*next_id = next_id.checked_add(&1u32.into()).ok_or(Error::<T>::DomainIdOverflow)?;
 			Ok(current_id)
 		})
 	}
