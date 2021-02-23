@@ -72,6 +72,7 @@ decl_error! {
 	pub enum Error for Module<T: Trait> {
 		NoneValue,
 		DomainIdOverflow,
+		TokenIdOverflow,
 		InvalidDomain,
 		NotDomainOwner,
 		InvalidSymbol,
@@ -117,7 +118,7 @@ decl_module! {
 					total_supply,
 					creator: creator.clone(),
 				};
-				let next_token_id = domain.next_token_id.checked_add(&1u32.into()).ok_or(Error::<T>::DomainIdOverflow)?;
+				let next_token_id = domain.next_token_id.checked_add(&1u32.into()).ok_or(Error::<T>::TokenIdOverflow)?;
 				domain.next_token_id = next_token_id;
 				Tokens::<T>::insert(domain_id, next_token_id, token);
 				Self::mint(creator.clone(), domain_id, next_token_id, total_supply)?;
