@@ -1,6 +1,6 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 use std::fmt::Debug;
-use frame_support::{Parameter, decl_error, decl_event, decl_module, decl_storage, ensure, dispatch::{DispatchError, DispatchResult}, traits::Get};
+use frame_support::{Parameter, decl_error, decl_event, decl_module, decl_storage, dispatch::{DispatchError, DispatchResult}, ensure, traits::{Get}};
 use frame_system::ensure_signed;
 use sp_runtime::traits::{AtLeast32BitUnsigned, Zero, MaybeSerializeDeserialize, Member, CheckedAdd};
 use sp_std::result::Result;
@@ -10,6 +10,7 @@ mod mock;
 
 #[cfg(test)]
 mod tests;
+// type BalanceOf<T> = <<T as Trait>::Currency as Currency<AccountIdOf<T>>>::Balance;
 
 pub trait Trait: frame_system::Trait {
 	type Balance: Parameter + Member + AtLeast32BitUnsigned + Codec + Default + Copy + MaybeSerializeDeserialize + Debug;
@@ -59,8 +60,11 @@ decl_event!(
 	pub enum Event<T> 
 	where 
 	AccountId = <T as frame_system::Trait>::AccountId,
-	DomainId = <T as Trait>::DomainId {
+	DomainId = <T as Trait>::DomainId,
+	TokenId = <T as Trait>::TokenId,
+	Balance = <T as Trait>::Balance {
 		DomainCreated(AccountId, DomainId),
+		TokenCreated(AccountId, DomainId, TokenId, Balance),
 	}
 );
 
@@ -116,7 +120,8 @@ decl_module! {
 				let next_token_id = domain.next_token_id.checked_add(&1u32.into()).ok_or(Error::<T>::DomainIdOverflow)?;
 				domain.next_token_id = next_token_id;
 				Tokens::<T>::insert(domain_id, next_token_id, token);
-				Self::mint(creator, domain_id, next_token_id, total_supply)?;
+				Self::mint(creator.clone(), domain_id, next_token_id, total_supply)?;
+				Self::deposit_event(RawEvent::TokenCreated(creator, domain_id, next_token_id, total_supply));
 				Ok(())
 			})
 		}
