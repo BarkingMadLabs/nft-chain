@@ -1,7 +1,7 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 use frame_support::{Parameter, decl_error, decl_event, decl_module, decl_storage, dispatch::{DispatchError, DispatchResult}, ensure, traits::{Get}};
 use frame_system::ensure_signed;
-use sp_runtime::traits::{AtLeast32BitUnsigned, Zero, MaybeSerializeDeserialize, Member, CheckedAdd};
+use sp_runtime::traits::{AtLeast32BitUnsigned, Zero, One, MaybeSerializeDeserialize, Member, CheckedAdd};
 use sp_std::result::Result;
 use sp_std::fmt::Debug;
 use sp_std::vec::Vec;
@@ -108,7 +108,7 @@ decl_module! {
 		#[weight = 10_000 + T::DbWeight::get().writes(1)]		
 		pub fn create_token(origin, domain_id: T::DomainId, creator: T::AccountId, total_supply: T::Balance, base_uri: Vec<u8>) -> DispatchResult {
 			let who = ensure_signed(origin)?;
-			ensure!(total_supply > 0.into(), Error::<T>::InvalidTotalSupply);
+			ensure!(total_supply > Zero::zero(), Error::<T>::InvalidTotalSupply);
 			ensure!(base_uri.len() > 3, Error::<T>::InvalidBaseUri);			
 				
 			Domains::<T>::try_mutate(domain_id, |domain| {
@@ -118,7 +118,7 @@ decl_module! {
 					total_supply,
 					creator: creator.clone(),
 				};
-				let next_token_id = domain.next_token_id.checked_add(&1u32.into()).ok_or(Error::<T>::TokenIdOverflow)?;
+				let next_token_id = domain.next_token_id.checked_add(&One::one()).ok_or(Error::<T>::TokenIdOverflow)?;
 				domain.next_token_id = next_token_id;
 				Tokens::<T>::insert(domain_id, next_token_id, token);
 				Self::mint(creator.clone(), domain_id, next_token_id, total_supply)?;
@@ -141,7 +141,7 @@ impl <T: Trait> Module<T> {
 	fn get_next_domain_id() -> Result<T::DomainId, DispatchError> {
 		NextDomainId::<T>::try_mutate(|next_id| -> Result<T::DomainId, DispatchError> {
 			let current_id : <T as Trait>::DomainId = *next_id;
-			*next_id = next_id.checked_add(&1u32.into()).ok_or(Error::<T>::DomainIdOverflow)?;
+			*next_id = next_id.checked_add(&One::one()).ok_or(Error::<T>::DomainIdOverflow)?;
 			Ok(current_id)
 		})
 	}
