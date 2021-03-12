@@ -138,13 +138,13 @@ impl <T: Trait> Module<T> {
 		})	
 	}
 
-	fn burn(domain_id: T::DomainId, token_id: T::TokenId, quantity: T::Balance) -> Result<T::Balance, DispatchError> {
-		ensure!(Domains::<T>::contains_key(domain_id), Error::<T>::InvalidDomain);
-		Balances::<T>::mutate(to, (domain_id, token_id), |balance| {
-			let new_balance = balance.checked_sub(&quantity).ok_or(Error::<T>::BalanceOverflow)?;
-			Ok(new_balance)
-		})	
-	}
+	// fn burn(domain_id: T::DomainId, token_id: T::TokenId, quantity: T::Balance) -> Result<T::Balance, DispatchError> {
+	// 	ensure!(Domains::<T>::contains_key(domain_id), Error::<T>::InvalidDomain);
+	// 	Balances::<T>::mutate(to, (domain_id, token_id), |balance| {
+	// 		let new_balance = balance.checked_sub(&quantity).ok_or(Error::<T>::BalanceOverflow)?;
+	// 		Ok(new_balance)
+	// 	})	
+	// }
 
 	fn get_next_domain_id() -> Result<T::DomainId, DispatchError> {
 		NextDomainId::<T>::try_mutate(|next_id| -> Result<T::DomainId, DispatchError> {
