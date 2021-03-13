@@ -66,8 +66,16 @@ fn it_burns_tokens() {
 		assert_ok!(NftModule::create_token(Origin::signed(ALICE), DOMAIN_ID, BOB, NUM_TOKENS, BASE_URI.as_bytes().to_vec()));
 		// Event for token creation with id 1 minted 32 for BOB
 		assert_eq!(last_event(), Event::nft(RawEvent::TokenCreated(BOB, DOMAIN_ID, 1, NUM_TOKENS)));
-		// Burn 16 tokens from BOB by BOB
+		// Burn 0 tokens from BOB by ALICE
+		assert_noop!(NftModule::burn_tokens(Origin::signed(ALICE), DOMAIN_ID, 1, BOB, 0), Error::<Test>::InvalidQuantityToBurn);
+		// BOB tries to Burn tokens from BOB
+		assert_noop!(NftModule::burn_tokens(Origin::signed(BOB), DOMAIN_ID, 1, BOB, NUM_TOKENS), Error::<Test>::NotDomainOwner);
+		// Burn NUM_TOKENS + 1 tokens from BOB by ALICE
+		assert_noop!(NftModule::burn_tokens(Origin::signed(ALICE), DOMAIN_ID, 1, BOB, NUM_TOKENS + 1), Error::<Test>::BalanceOverflow);
+		// Burn 16 tokens from BOB by ALICE
 		assert_ok!(NftModule::burn_tokens(Origin::signed(ALICE), DOMAIN_ID, 1, BOB, NUM_TOKENS / 2));
+		// Check Bob's balance, should be now NUM_TOKENS / 2
+		assert_eq!(NftModule::balances(BOB, (DOMAIN_ID, 1)), NUM_TOKENS / 2);
 		// Event for token burning 
 		assert_eq!(last_event(), Event::nft(RawEvent::TokensBurnt(BOB, DOMAIN_ID, 1, NUM_TOKENS / 2)));
 	});
