@@ -7,6 +7,7 @@ const DOMAIN_ID: u64 = 0;
 const TICKER: &str = "ZOD";
 const NAME: &str = "Zodiac";
 const BASE_URI: &str = "https://barkingmad.io/assets";
+const NUM_TOKENS: u64 = 32;
 
 #[test]
 fn it_creates_a_domain() {
@@ -29,7 +30,6 @@ fn it_creates_a_domain() {
 #[test]
 fn it_creates_a_token() {
 	new_test_ext().execute_with(|| {
-		const NUM_TOKENS: u64 = 32;
 		// Create domain ZOD "Zodiac"
 		assert_ok!(NftModule::create_domain(Origin::signed(ALICE), TICKER.as_bytes().to_vec(), NAME.as_bytes().to_vec()));
 		// Event for domain creation with owner and domain id
@@ -63,12 +63,12 @@ fn it_burns_tokens() {
 		// Event for domain creation with owner and domain id
 		assert_eq!(last_event(), Event::nft(RawEvent::DomainCreated(ALICE, DOMAIN_ID)));
 		// Create token for new domain id, creator being BOB with asset url and mint to BOB 32 tokens
-		assert_ok!(NftModule::create_token(Origin::signed(ALICE), DOMAIN_ID, BOB, 32, BASE_URI.as_bytes().to_vec()));
+		assert_ok!(NftModule::create_token(Origin::signed(ALICE), DOMAIN_ID, BOB, NUM_TOKENS, BASE_URI.as_bytes().to_vec()));
 		// Event for token creation with id 1 minted 32 for BOB
-		assert_eq!(last_event(), Event::nft(RawEvent::TokenCreated(BOB, DOMAIN_ID, 1, 32)));
+		assert_eq!(last_event(), Event::nft(RawEvent::TokenCreated(BOB, DOMAIN_ID, 1, NUM_TOKENS)));
 		// Burn 16 tokens from BOB by BOB
-		assert_ok!(NftModule::burn_tokens(Origin::signed(ALICE), DOMAIN_ID, 1, BOB, 16));
+		assert_ok!(NftModule::burn_tokens(Origin::signed(ALICE), DOMAIN_ID, 1, BOB, NUM_TOKENS / 2));
 		// Event for token burning 
-		assert_eq!(last_event(), Event::nft(RawEvent::TokensBurnt(BOB, DOMAIN_ID, 1, 16)));
+		assert_eq!(last_event(), Event::nft(RawEvent::TokensBurnt(BOB, DOMAIN_ID, 1, NUM_TOKENS / 2)));
 	});
 }
