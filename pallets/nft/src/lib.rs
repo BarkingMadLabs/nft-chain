@@ -135,10 +135,7 @@ decl_module! {
 				let next_token_id = domain.next_token_id.checked_add(&One::one()).ok_or(Error::<T>::TokenIdOverflow)?;
 				domain.next_token_id = next_token_id;
 				Tokens::<T>::insert(domain_id, next_token_id, token);
-				// let zero: T::Balance = Zero::zero();
-				// Why does this work and not Self::mint ???
-				Balances::<T>::insert(creator.clone(), (domain_id, next_token_id), total_supply);	
-				// Self::mint(creator.clone(), domain_id, next_token_id, total_supply)?;
+				Self::mint(creator.clone(), domain_id, next_token_id, total_supply)?;
 				Self::deposit_event(RawEvent::TokenCreated(creator, domain_id, next_token_id, total_supply));
 				Ok(())
 			})
@@ -160,8 +157,9 @@ decl_module! {
 impl <T: Trait> Module<T> {
 	fn mint(to: T::AccountId, domain_id: T::DomainId, token_id: T::TokenId, quantity: T::Balance) -> Result<T::Balance, DispatchError> {
 		ensure!(Domains::<T>::contains_key(domain_id), Error::<T>::InvalidDomain);
-		Balances::<T>::try_mutate(to, (domain_id, token_id), |balance| {
+		Balances::<T>::try_mutate(to, (domain_id, token_id), |balance| {			
 			let new_balance = balance.checked_add(&quantity).ok_or(Error::<T>::BalanceOverflow)?;
+			*balance = new_balance; 
 			Ok(new_balance)
 		})	
 	}
@@ -170,6 +168,7 @@ impl <T: Trait> Module<T> {
 		ensure!(Domains::<T>::contains_key(domain_id), Error::<T>::InvalidDomain);
 		Balances::<T>::try_mutate(from, (domain_id, token_id), |balance| {
 			let new_balance = balance.checked_sub(&quantity).ok_or(Error::<T>::BalanceOverflow)?;
+			*balance = new_balance; 
 			Ok(new_balance)
 		})	
 	}
